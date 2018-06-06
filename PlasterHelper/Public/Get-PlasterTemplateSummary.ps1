@@ -111,21 +111,22 @@ function Get-PlasterTemplateSummary {
                     }
                 }
             ) # Content
-            Variables = @()
+            TemplateVariables = @()
         } #NewObject: PSCustomObject
 
-        foreach ($TemplateFile in $output.Content | Where-Object {$_.type -eq "TemplateFile"}) {
+        foreach ($TemplateFile in ($output.Content | Where-Object {$_.type -eq "TemplateFile"})) {
             $templateFilePath = Resolve-Path (Join-Path $templateFolder ($TemplateFile.Source))
 
             $variableGroups = [regex]::Matches($(Get-Content $templateFilePath), '(?<=\<\%\=\$PLASTER_PARAM_).+?(?=%>)').value |
                 Group-Object
 
 
-            $output.Variables = $variableGroups |
+            $output.TemplateVariables += $variableGroups |
                 ForEach-Object {
                     [PSCustomObject]@{
-                        Name = $variable.Name
-                        Count = $variable.Count
+                        ParameterName = $_.Name
+                        Count = $_.Count
+                        Path = $templateFilePath
                     }
                 }
 

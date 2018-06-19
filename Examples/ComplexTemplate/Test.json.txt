@@ -1,0 +1,12 @@
+{
+    "Item":  "Fruits",
+    "Type":  [
+<%
+    if ($PLASTER_PARAM_UserChoice) {
+        $output = $PLASTER_PARAM_UserChoice.split(",").foreach({"`"$_`","})
+        $output[-1] = $output[-1].replace(",","")
+        $output
+    }
+%>
+             ]
+}

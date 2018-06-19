@@ -1,13 +1,14 @@
 <#
 .SYNOPSIS
-A short description.
+Extract information from a PlasterManifest.xml file. It also retrieves TemplateFile variables/scriptblocks being used.
 
 .DESCRIPTION
-A longer detailed description of what is done in the function.
+Converts each item of the PlasterManifext.xml file into an object that can be used for testing or comparison.
+Any TemplateFile content types are read in to capture any <%=...%> or <%`n...`n%> tokens.
 
-    Author      :
-    Date Created: 6/4/2018
-    Date Updated:
+    Author      : Brent Wright
+    Date Created: 06/04/2018
+    Date Updated: 06/12/2018
 
 
 .EXAMPLE
@@ -112,20 +113,53 @@ function Get-PlasterTemplateSummary {
                 }
             ) # Content
             TemplateVariables = @()
+            TemplateScriptBlocks = @()
         } #NewObject: PSCustomObject
 
         foreach ($TemplateFile in ($output.Content | Where-Object {$_.type -eq "TemplateFile"})) {
             $templateFilePath = Resolve-Path (Join-Path $templateFolder ($TemplateFile.Source))
 
-            $variableGroups = [regex]::Matches($(Get-Content $templateFilePath), '(?<=\<\%\=\$PLASTER_PARAM_).+?(?=%>)').value |
-                Group-Object
+            $fileContent = Get-Content $templateFilePath
 
+            # Get a list of variables "<%=...>" in the file.
+            $variableGroups = [regex]::Matches($fileContent, '(?<=\<\%\=\$PLASTER_PARAM_).+?(?=%>)').value | Group-Object
 
             $output.TemplateVariables += $variableGroups |
                 ForEach-Object {
                     [PSCustomObject]@{
                         ParameterName = $_.Name
                         Count = $_.Count
+                        Path = $templateFilePath
+                    }
+                }
+
+            # Get a list of scriptblocks "<%...%>" in the file.
+            $placeholderFound = $false
+            $scriptBlocks = foreach ($line in $fileContent) {
+
+                # Search for the end of the script block.
+                if ($line -match "%>") {
+                    $placeholderFound = $false
+                    $output
+                }
+
+                if ($placeholderFound) {
+                    $output += $line
+                }
+
+                # Search for beginning of the script block.
+                if ($line -match "<%(?!=\=)") {
+                    $placeholderFound = $true
+                    $output = @()
+                }
+
+
+            }
+
+            $output.TemplateScriptBlocks += $scriptBlocks |
+                ForEach-Object {
+                    [PSCustomObject]@{
+                        ScriptBlock = $_
                         Path = $templateFilePath
                     }
                 }

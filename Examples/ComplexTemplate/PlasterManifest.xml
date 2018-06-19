@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<plasterManifest
+  schemaVersion="1.1"
+  templateType="Project" xmlns="http://www.microsoft.com/schemas/PowerShell/Plaster/v1">
+  <metadata>
+    <name>ComplexTemplate</name>
+    <id>bcd7b44b-0fda-4a08-9857-3e064abd6e2b</id>
+    <version>0.0.1</version>
+    <title>A Complex Template</title>
+    <description>Test template for complicated templating patterns.</description>
+    <author>Brent Wright</author>
+    <tags></tags>
+  </metadata>
+  <parameters>
+          <parameter name='userChoice'
+                     type='multichoice'
+                     prompt='Select from these choices:'
+                     default='0'
+                     store='text'>
+              <choice label='&amp;Apple'
+                      help='Choose an Apple.'
+                      value='Apple'/>
+              <choice label='&amp;Banana'
+                      help='Choose a Banana.'
+                      value='Banana'/>
+              <choice label='&amp;Grapes'
+                      help='Choose a cluster of grapes.'
+                      value='Grapes'/>
+          </parameter>
+  </parameters>
+  <content>
+          <templateFile source='Test.json.txt'
+                        destination='Test.json'/>
+  </content>
+</plasterManifest>

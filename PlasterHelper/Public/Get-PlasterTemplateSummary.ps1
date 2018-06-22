@@ -135,22 +135,23 @@ function Get-PlasterTemplateSummary {
 
             # Get a list of scriptblocks "<%...%>" in the file.
             $placeholderFound = $false
-            $scriptBlocks = foreach ($line in $fileContent) {
+            $scriptBlocks = [System.Collections.ArrayList]@()
+            foreach ($line in $fileContent) {
 
                 # Search for the end of the script block.
                 if ($line -match "%>") {
                     $placeholderFound = $false
-                    $output
+                    $scriptblocks.add($($scriptblock -join "`n")) | Out-Null
                 }
 
                 if ($placeholderFound) {
-                    $output += $line
+                    $scriptblock += $line
                 }
 
                 # Search for beginning of the script block.
-                if ($line -match "<%(?!=\=)") {
+                if ($line -match "<%(?!\=)") {
                     $placeholderFound = $true
-                    $output = @()
+                    $scriptblock = @()
                 }
 
 
@@ -158,10 +159,14 @@ function Get-PlasterTemplateSummary {
 
             $output.TemplateScriptBlocks += $scriptBlocks |
                 ForEach-Object {
-                    [PSCustomObject]@{
+                    $object = [PSCustomObject]@{
                         ScriptBlock = $_
                         Path = $templateFilePath
                     }
+
+                    $object.psobject.typenames.insert(0,"Plaster.Template.ScriptBlock")
+
+                    $object
                 }
 
         }
